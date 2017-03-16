@@ -2,8 +2,6 @@ import urllib
 import untangle
 import datetime
 
-time = input("From previous ___ days?")
-
 fellows = ["M Barkeshli", 
            "G W Bryant", 
            "G K Campbell", 
@@ -38,8 +36,7 @@ fellows = ["M Barkeshli",
            "J R Williams",
            "V M Yakovenko"]
 
-#hyperlink_format = '<a href="{link}">{text}</a>'
-#link_text = hyperlink_format.format
+message_string = []
 
 def reform_name(fellow):
     name = fellow.split()
@@ -48,11 +45,9 @@ def reform_name(fellow):
 
 def print_papers(paper_list):
     if len(paper_list) > 0:
-        print(fellow)
+        message_string.append('\n*' + fellow + '*')
         for paper in paper_list:
-            print(paper)
-    else:
-        return "No papers."
+            message_string.append('\n' + paper)
 
 def get_papers(fellow):
     
@@ -75,6 +70,10 @@ def get_papers(fellow):
 #            paper = link_text(link=link.encode('utf-8'), text=title.encode('utf-8'))
             paper_list.append(title + ' ' + link)
     print_papers(paper_list)
-            
+    
+time = 7
+
 for fellow in fellows:
     get_papers(fellow)
+
+print(''.join(message_string))
