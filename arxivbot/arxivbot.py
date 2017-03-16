@@ -72,7 +72,7 @@ def get_papers(fellow, time, message_string):
             paper_list.append(title + ' ' + link)
     print_papers(paper_list, fellow, message_string)
 
-# starterbot's ID as an environment variable
+# arxivbot ID as an environment variable
 BOT_ID = os.environ.get("BOT_ID")
 
 # constants
@@ -124,7 +124,7 @@ def parse_slack_output(slack_rtm_output):
 if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
-        print("StarterBot connected and running!")
+        print("arXivbot connected and running!")
         while True:
             command, channel = parse_slack_output(slack_client.rtm_read())
             if command and channel:
