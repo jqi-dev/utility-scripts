@@ -1,48 +1,26 @@
 import os
 import time
+import csv
 import urllib
 import untangle
 import datetime
 from slackclient import SlackClient
 
-fellows = ["M Barkeshli", 
-           "G W Bryant", 
-           "G K Campbell", 
-           "Charles W Clark", 
-           "S Das Sarma", 
-           "V Galitski", 
-           "A Gorshkov",
-           "M Hafezi",
-           "W T Hill",
-           "Bei Lok Hu",
-           "P S Julienne",
-           "B E Kane",
-           "P D Lett",
-           "C J Lobb",
-           "V Manucharyan",
-           "A Migdall",
-           "C Monroe",
-           "L Orozco",
-           "K Osborn",
-           "W D Phillips",
-           "J V Porto",
-           "S L Rolston",
-           "M S Safronova",
-           "J D Sau",
-           "G Solomon",
-           "I Spielman",
-           "J M Taylor",
-           "E Tiesinga",
-           "E Waks",
-           "F C Wellstood",
-           "C J Williams",
-           "J R Williams",
-           "V M Yakovenko"]
 
+fellows = []
+
+
+with open('jqi-fellows.csv','rb') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        fellows.append(row[0])
+     
+    
 def reform_name(fellow):
     name = fellow.split()
     author = name[-1] + '_' + '_'.join(name[0:-1])
     return author
+
 
 def print_papers(paper_list, fellow, message_string):
     if len(paper_list) > 0:
@@ -50,6 +28,7 @@ def print_papers(paper_list, fellow, message_string):
         for paper in paper_list:
             message_string.append('\n' + paper)
 
+            
 def get_papers(fellow, time, message_string):
     
     author = reform_name(fellow)
@@ -71,6 +50,7 @@ def get_papers(fellow, time, message_string):
             paper_list.append(title + ' ' + link)
     print_papers(paper_list, fellow, message_string)
 
+    
 # arxivbot ID as an environment variable
 BOT_ID = os.environ.get("BOT_ID")
 
@@ -78,9 +58,10 @@ BOT_ID = os.environ.get("BOT_ID")
 AT_BOT = "<@" + BOT_ID + ">"
 EXAMPLE_COMMAND = "papers"
 
-# instantiate Slack & Twilio clients
+# instantiate Slack client
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
         
+    
 def handle_command(command, channel):
     """
         Receives commands directed at the bot and determines if they
