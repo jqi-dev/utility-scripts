@@ -54,7 +54,7 @@ def get_papers(fellow, time, message_string):
     
     author = reform_name(fellow)
     
-    url = 'http://export.arxiv.org/api/query?search_query=au:+'+ author + '&sortBy=lastUpdatedDate&sortOrder=descending'
+    url = 'http://export.arxiv.org/api/query?search_query=au:+' + author + '&sortBy=lastUpdatedDate&sortOrder=descending'
     data = urllib.urlopen(url).read()   
     obj = untangle.parse(data)
     
@@ -68,7 +68,6 @@ def get_papers(fellow, time, message_string):
         if diff <= time:
             title = entry.title.cdata.replace("\n ", "")
             link = entry.id.cdata
-#            paper = link_text(link=link.encode('utf-8'), text=title.encode('utf-8'))
             paper_list.append(title + ' ' + link)
     print_papers(paper_list, fellow, message_string)
 
