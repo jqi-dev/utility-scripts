@@ -18,7 +18,8 @@ cmtc = []
 ### Dictionary for affiliation flag lookups
 affiliation_lookup = {'jqi' : "Joint Quantum Institute",
                       'phys' : "Department of Physics, University of Maryland",
-                      'quics': "Joint Center for Quantum Information and Computer Science"}
+                      'quics': "Joint Center for Quantum Information and Computer Science",
+                      'cmtc' : "Matter Theory Center"}
 
 
 with open('jqi-fellows.csv','rb') as f:
@@ -84,11 +85,11 @@ def which_author_list(author_flag):
 
     return which_list
 
-def experimental_search(affiliation_flag):
-    if affiliation_lookup[affiliation_flag]:
+def experimental_search(affiliation_flag, pages):
+    if affiliation_flag in affiliation_lookup:
         # Build up the URL to request
         query = affiliation_lookup[affiliation_flag]
-        url = "http://search.arxiv.org:8081/?query=\"" + query + "\"&byDate=1"
+        url = "http://search.arxiv.org:8081/?query=\"" + query + "\"&byDate=1&startat="
 
         # Grab the html and prase it into a BeautifulSoup object
         html = urllib.urlopen(url).read()
@@ -99,23 +100,32 @@ def experimental_search(affiliation_flag):
 
         # return message header
         message = "Most recent papers with the affiliation *\"" + query + "\"*:\n"
+        for i in range(pages):
 
-        for paper in results:
-            authors = paper.find_all('span', {'class': 'author'})[0].string
-            authors = authors.replace('\n', "")
-            authors = authors.replace("  ", " ")
-            title = paper.find_all('span', {'class': 'title'})[0].string
-            title = title.replace('\n', "")
-            title = title.replace("  ", " ")
-            link = paper.find_all('a', {'class': 'url'})[0].string
-            date = paper.find_all('span', {'class': 'age'})[0].string
-            date = date.replace("; Indexed ", "")
+            # Grab the html and prase it into a BeautifulSoup object
+            html = urllib.urlopen(url + str(i*10)).read()
+            soup = BeautifulSoup(html, "lxml")
 
-            message = message + "*" + authors + "*" + "\n" + title + " " + link + "\n"
+            # Find every td on the page with a class of "snipp"
+
+            results = soup.find_all('td', {'class': 'snipp'})
+
+            for paper in results:
+                authors = paper.find_all('span', {'class': 'author'})[0].string
+                authors = authors.replace('\n', "")
+                authors = authors.replace("  ", " ")
+                title = paper.find_all('span', {'class': 'title'})[0].string
+                title = title.replace('\n', "")
+                title = title.replace("  ", " ")
+                link = paper.find_all('a', {'class': 'url'})[0].string
+                date = paper.find_all('span', {'class': 'age'})[0].string
+                date = date.replace("; Indexed ", "")
+
+                message = message + "*" + authors + "*" + "\n" + title + " " + link + "\n"
 
         return message
 
-    return "Could not find any papers with affiliation *" + query + "*\n"
+    return "Could not find any papers with affiliation *" + affiliation_flag + "*\n"
 
 # arxivbot ID as an environment variable
 BOT_ID = os.environ.get("BOT_ID")
@@ -168,7 +178,13 @@ def handle_command(command, channel):
         print "Fulfilling affiliation search!"
         affiliation_flag = command.split()[1]
 
-        response = experimental_search(affiliation_flag)
+        try:
+            pages = int(command.split()[2])
+        except:
+            print "Number of pages for affiliation search not specified; defaulting to 1"
+            pages = 1
+
+        response = experimental_search(affiliation_flag, pages)
 
     slack_client.api_call("chat.postMessage", channel=channel,
                           text=response, as_user=True)
