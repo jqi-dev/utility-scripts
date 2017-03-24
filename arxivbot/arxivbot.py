@@ -128,7 +128,7 @@ def handle_command(command, channel):
             # Grab the flag for which list to search
             author_flag = command.split()[1]
 
-            # Return the list based on the key. Defaults to jqi_fellows if key not found
+            # Return the list based on the author flag. Defaults to jqi_fellows if flag not found
             author_search_list = author_lookup.get(author_flag, jqi_fellows)
 
             try:
