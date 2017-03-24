@@ -7,15 +7,21 @@ import datetime
 from slackclient import SlackClient
 
 
-fellows = []
+jqi_fellows = []
+
+# Currently only have JQI Fellows in a nice CSV format
+phys_faculty = []
+quics_fellows = []
+cnam = []
+cmtc = []
 
 
 with open('jqi-fellows.csv','rb') as f:
     reader = csv.reader(f)
     for row in reader:
-        fellows.append(row[0])
-     
-    
+        jqi_fellows.append(row[0])
+
+
 def reform_name(fellow):
     name = fellow.split()
     author = name[-1] + '_' + '_'.join(name[0:-1])
@@ -28,15 +34,15 @@ def print_papers(paper_list, fellow, message_string):
         for paper in paper_list:
             message_string.append('\n' + paper)
 
-            
+
 def get_papers(fellow, time, message_string):
-    
+
     author = reform_name(fellow)
-    
+
     url = 'http://export.arxiv.org/api/query?search_query=au:+' + author + '&sortBy=lastUpdatedDate&sortOrder=descending'
-    data = urllib.urlopen(url).read()   
+    data = urllib.urlopen(url).read()
     obj = untangle.parse(data)
-    
+
     paper_list = []
 
     for entry in obj.feed.entry:
@@ -50,38 +56,79 @@ def get_papers(fellow, time, message_string):
             paper_list.append(title + ' ' + link)
     print_papers(paper_list, fellow, message_string)
 
-    
+def which_author_list(author_flag):
+    # Really wish that Python had native switch statements
+    if author_flag == "jqi":
+        which_list = jqi_fellows
+    elif author_flag == "phys":
+        which_list = phys_faculty
+    elif author_flag == "quics":
+        which_list = quics_fellows
+    elif author_flag == "cnam":
+        which_list = cnam
+    elif author_flag == "cmtc":
+        which_list = cmtc
+    else:
+        which_list = jqi_fellows # Defaults to JQI for now
+
+    ### This doesn't work because get_papers() fails somewhere
+    #else:
+        # If it's not one of our predefined lists, interptret it as a query for an author name
+        # This might not be the best design
+        #which_list = [unicodedata.normalize('NFKD',author_flag).encode('ascii', 'ignore')]
+
+    return which_list
+
 # arxivbot ID as an environment variable
 BOT_ID = os.environ.get("BOT_ID")
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
-EXAMPLE_COMMAND = "papers"
 
 # instantiate Slack client
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
-        
-    
+
+
 def handle_command(command, channel):
     """
         Receives commands directed at the bot and determines if they
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    response = "Not sure what you mean. Use *" + EXAMPLE_COMMAND + \
-               "* followed by the number of days."
-    if command.startswith(EXAMPLE_COMMAND):
+    response = "Not sure what you mean. Use *author* followed by " + \
+               "jqi/quics/phys/cnam/cmtc and a number of days. Or, use " + \
+               "*affiliation* followed by jqi/phys/quics/cnam/cmtc. " + \
+               "(Note that affiliation search doesn't work yet.)"
+
+    # Possible commands start with "author" or "affiliation"
+    if command.startswith("author"):
         try:
-            days = int(command.split()[1])
-            if days <= 180:
-                message = []
-                for fellow in fellows:
-                    get_papers(fellow, days, message)
-                response = "Papers updated in arXiv from the last " + str(days) + " days:" + ''.join(message)
-            else:
-                response = "Please limit days to fewer than 180."
+            # Grab the flag for which list to search
+            author_flag = command.split()[1]
+
+            # Return the list based on the flag, or a list with a single author for generic searches
+            author_search_list = which_author_list(author_flag)
+
+            try:
+                days = int(command.split()[2]) # days should probably default to some value, like 30 or something
+                if days <= 180:
+                    message = []
+                    for author in author_search_list:
+                        get_papers(author, days, message)
+                        response = "Papers updated in arXiv from the last " + str(days) + " days:" + ''.join(message)
+                else:
+                    response = "Please limit days to fewer than 180."
+            except:
+                print "Couldn't get the days"
+                pass
         except:
+            print "Couldn't get the flag"
             pass
+
+    if command.startswith("affiliation"):
+        # Implement experimental search by affiliation
+        pass
+
     slack_client.api_call("chat.postMessage", channel=channel,
                           text=response, as_user=True)
 
