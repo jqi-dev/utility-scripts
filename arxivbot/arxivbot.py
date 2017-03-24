@@ -20,6 +20,11 @@ affiliation_lookup = {'jqi' : "Joint Quantum Institute",
                       'phys' : "Department of Physics, University of Maryland",
                       'quics': "Joint Center for Quantum Information and Computer Science"}
 
+author_lookup = {'jqi' : jqi_fellows,
+                 'phys': phys_faculty,
+                 'quics' : quics_fellows,
+                 'cnam' : cnam,
+                 'cmtc' : cmtc}
 
 with open('jqi-fellows.csv','rb') as f:
     reader = csv.reader(f)
@@ -61,28 +66,6 @@ def get_papers(fellow, time, message_string):
             paper_list.append(title + ' ' + link)
     print_papers(paper_list, fellow, message_string)
 
-def which_author_list(author_flag):
-    # Really wish that Python had native switch statements
-    if author_flag == "jqi":
-        which_list = jqi_fellows
-    elif author_flag == "phys":
-        which_list = phys_faculty
-    elif author_flag == "quics":
-        which_list = quics_fellows
-    elif author_flag == "cnam":
-        which_list = cnam
-    elif author_flag == "cmtc":
-        which_list = cmtc
-    else:
-        which_list = jqi_fellows # Defaults to JQI for now
-
-    ### This doesn't work because get_papers() fails somewhere
-    #else:
-        # If it's not one of our predefined lists, interptret it as a query for an author name
-        # This might not be the best design
-        #which_list = [unicodedata.normalize('NFKD',author_flag).encode('ascii', 'ignore')]
-
-    return which_list
 
 def experimental_search(affiliation_flag):
     if affiliation_lookup[affiliation_flag]:
@@ -146,7 +129,7 @@ def handle_command(command, channel):
             author_flag = command.split()[1]
 
             # Return the list based on the flag, or a list with a single author for generic searches
-            author_search_list = which_author_list(author_flag)
+            author_search_list = author_lookup.get(author_flag, jqi_fellows)
 
             try:
                 days = int(command.split()[2]) # days should probably default to some value, like 30 or something
