@@ -128,8 +128,8 @@ def handle_command(command, channel):
     """
     response = "Not sure what you mean. Use *author* followed by " + \
                "jqi/quics/phys/cnam/cmtc and a number of days. Or, use " + \
-               "*affiliation* followed by jqi/phys/quics/cnam/cmtc. " + \
-               "(Note that affiliation search doesn't work yet.)"
+               "*affiliation* followed by jqi/phys/quics/cnam/cmtc and a number of pages. " + \
+               "(The number of pages defaults to 1.)"
 
     # Possible commands start with "author" or "affiliation"
     if command.startswith("author"):
