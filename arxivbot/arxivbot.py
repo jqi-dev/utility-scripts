@@ -34,22 +34,27 @@ with open('jqi-fellows.csv','rb') as f:
         jqi_fellows.append(row[0])
 
 
-def reform_name(fellow):
-    name = fellow.split()
-    author = name[-1] + '_' + '_'.join(name[0:-1])
-    return author
+def reform_name(author):
+    n = author.split()
+    n = n[-1] + '_' + '_'.join(n[0:-1])
+    return n
 
 
-def print_papers(paper_list, fellow, message_string):
+def print_papers(paper_list, author):
+
+    message = []
+
     if len(paper_list) > 0:
-        message_string.append('\n*' + fellow + '*')
+        message.append('\n*' + author + '*')
         for paper in paper_list:
-            message_string.append('\n' + paper)
+            message.append('\n' + paper)
+
+    return message
 
 
-def get_papers(fellow, time, message_string):
+def get_papers(author, days):
 
-    author = reform_name(fellow)
+    author = reform_name(author)
 
     url = 'http://export.arxiv.org/api/query?search_query=au:+' + author + '&sortBy=lastUpdatedDate&sortOrder=descending'
     data = urllib.urlopen(url).read()
@@ -62,11 +67,12 @@ def get_papers(fellow, time, message_string):
         datetime_object = datetime.datetime.strptime(date, '%Y-%m-%d').date()
         today = datetime.date.today()
         diff = abs(today - datetime_object).days
-        if diff <= time:
+        if diff <= days:
             title = entry.title.cdata.replace("\n ", "")
             link = entry.id.cdata
             paper_list.append(title + ' ' + link)
-    print_papers(paper_list, fellow, message_string)
+
+    return print_papers(paper_list, author)
 
 
 def experimental_search(affiliation_flag, pages):
@@ -111,6 +117,13 @@ def experimental_search(affiliation_flag, pages):
 
     return "Could not find any papers with affiliation *" + affiliation_flag + "*\n"
 
+def return_search(author_list, days):
+    message = []
+    for author in author_list:
+        message += get_papers(author, days)
+    response = "Papers updated in arXiv from the last " + str(days) + " days:" + ''.join(message)
+    return response
+
 # arxivbot ID as an environment variable
 BOT_ID = os.environ.get("BOT_ID")
 
@@ -127,10 +140,12 @@ def handle_command(command, channel):
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    response = "Not sure what you mean. Use *author* followed by " + \
-               "jqi/quics/phys/cnam/cmtc and a number of days. Or, use " + \
-               "*affiliation* followed by jqi/phys/quics/cnam/cmtc and a number of pages. " + \
-               "(The number of pages defaults to 1.)"
+    response = "Not sure what you mean." + \
+               "\n_For fellows search_: Use *author* followed by jqi/quics/phys/cnam/cmtc and a number of days. " + \
+               "(The number of days defaults to 30.)" + \
+               "\n_For affiliation search_: Use *affiliation* followed by jqi/phys/quics/cnam/cmtc and a number of pages. " + \
+               "(The number of pages defaults to 1.)" + \
+               "\n_For individual search_: Use *search* followed by the name. Returns papers from past 30 days)."
 
     # Possible commands start with "author" or "affiliation"
     if command.startswith("author"):
@@ -143,17 +158,13 @@ def handle_command(command, channel):
             author_search_list = author_lookup.get(author_flag, jqi_fellows)
 
             try:
-                days = int(command.split()[2]) # days should probably default to some value, like 30 or something
-                if days <= 180:
-                    message = []
-                    for author in author_search_list:
-                        get_papers(author, days, message)
-                        response = "Papers updated in arXiv from the last " + str(days) + " days:" + ''.join(message)
-                else:
-                    response = "Please limit days to fewer than 180."
+                days = int(command.split()[2]) # check to see if value for days is given
             except:
-                print "Couldn't get the days"
-                pass
+                print "Number of days for fellows search not specified; defaulting to 30"
+                days = 30
+
+            response = return_search(author_search_list, days)
+
         except:
             print "Couldn't get the flag"
             pass
@@ -169,6 +180,15 @@ def handle_command(command, channel):
             pages = 1
 
         response = experimental_search(affiliation_flag, pages)
+
+    if command.startswith("search"):
+        print "Fufilling individual search!"
+
+        # use everything after 'search' as the search term
+        name = command.split(' ', 1)[1]
+        response = return_search([name], 30)
+
+    print response
 
     slack_client.api_call("chat.postMessage", channel=channel,
                           text=response, as_user=True)
