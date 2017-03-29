@@ -32,6 +32,13 @@ with open('jqi-fellows.csv','rb') as f:
     reader = csv.reader(f)
     for row in reader:
         jqi_fellows.append(row[0])
+    f.close()
+
+with open('phys_faculty.csv','rbU') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        phys_faculty.append(row[0])
+    f.close()
 
 
 def reform_name(author):
@@ -55,6 +62,7 @@ def print_papers(paper_list, author):
 def get_papers(author, days):
 
     author = reform_name(author)
+    print author
 
     url = 'http://export.arxiv.org/api/query?search_query=au:+' + author + '&sortBy=lastUpdatedDate&sortOrder=descending'
     data = urllib.urlopen(url).read()
@@ -62,15 +70,18 @@ def get_papers(author, days):
 
     paper_list = []
 
-    for entry in obj.feed.entry:
-        date = entry.updated.cdata[0:-10]
-        datetime_object = datetime.datetime.strptime(date, '%Y-%m-%d').date()
-        today = datetime.date.today()
-        diff = abs(today - datetime_object).days
-        if diff <= days:
-            title = entry.title.cdata.replace("\n ", "")
-            link = entry.id.cdata
-            paper_list.append(title + ' ' + link)
+    try:
+        for entry in obj.feed.entry:
+            date = entry.updated.cdata[0:-10]
+            datetime_object = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+            today = datetime.date.today()
+            diff = abs(today - datetime_object).days
+            if diff <= days:
+                title = entry.title.cdata.replace("\n ", "")
+                link = entry.id.cdata
+                paper_list.append(title + ' ' + link)
+    except:
+        pass
 
     return print_papers(paper_list, author)
 
@@ -81,7 +92,7 @@ def experimental_search(affiliation_flag, pages):
         query = affiliation_lookup[affiliation_flag]
         url = "http://search.arxiv.org:8081/?query=\"" + query + "\"&byDate=1&startat="
 
-        # Grab the html and prase it into a BeautifulSoup object
+        # Grab the html and parse it into a BeautifulSoup object
         html = urllib.urlopen(url).read()
         soup = BeautifulSoup(html, "lxml")
 
