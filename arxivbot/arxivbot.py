@@ -17,24 +17,24 @@ cnam = []
 cmtc = []
 
 ### Dictionary for affiliation flag lookups
-affiliation_lookup = {'jqi' : "Joint Quantum Institute",
-                      'phys' : "Department of Physics, University of Maryland",
+affiliation_lookup = {'jqi': "Joint Quantum Institute",
+                      'phys': "Department of Physics, University of Maryland",
                       'quics': "Joint Center for Quantum Information and Computer Science",
-                      'cmtc' : "Matter Theory Center"}
+                      'cmtc': "Matter Theory Center"}
 
-author_lookup = {'jqi' : jqi_fellows,
+author_lookup = {'jqi': jqi_fellows,
                  'phys': phys_faculty,
-                 'quics' : quics_fellows,
-                 'cnam' : cnam,
-                 'cmtc' : cmtc}
+                 'quics': quics_fellows,
+                 'cnam': cnam,
+                 'cmtc': cmtc}
 
-with open('jqi-fellows.csv','rb') as f:
+with open('jqi-fellows.csv', 'rb') as f:
     reader = csv.reader(f)
     for row in reader:
         jqi_fellows.append(row[0])
     f.close()
 
-with open('phys_faculty.csv','rbU') as f:
+with open('phys_faculty.csv', 'rbU') as f:
     reader = csv.reader(f)
     for row in reader:
         phys_faculty.append(row[0])
@@ -128,6 +128,7 @@ def experimental_search(affiliation_flag, pages):
 
     return "Could not find any papers with affiliation *" + affiliation_flag + "*\n"
 
+
 def return_search(author_list, days):
     message = []
     for author in author_list:
@@ -193,7 +194,7 @@ def handle_command(command, channel):
         response = experimental_search(affiliation_flag, pages)
 
     if command.startswith("search"):
-        print "Fufilling individual search!"
+        print "Fulfilling individual search!"
 
         # use everything after 'search' as the search term
         name = command.split(' ', 1)[1]
@@ -222,7 +223,7 @@ def parse_slack_output(slack_rtm_output):
 
 
 if __name__ == "__main__":
-    READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
+    READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
         print("arXivbot connected and running!")
         while True:
