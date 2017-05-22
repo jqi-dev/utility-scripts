@@ -145,7 +145,6 @@ AT_BOT = "<@" + BOT_ID + ">"
 # instantiate Slack client
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
 
-
 def handle_command(command, channel):
     """
         Receives commands directed at the bot and determines if they
